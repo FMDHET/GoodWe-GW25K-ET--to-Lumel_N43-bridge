@@ -267,6 +267,14 @@ th { font-weight: 600; color: var(--mut); font-size: 12.5px; }
 .lumel-table td:nth-child(n+4) { color: var(--mut); font-size: 12px; }
 .lumel-table td:last-child { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; white-space: nowrap; overflow: visible; }
 .identify-btn { margin-left: 8px; padding: 1px 10px; min-height: 0; font-size: 12px; vertical-align: 1px; }
+.ha-steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px 24px; margin-top: 8px; }
+.ha-steps h3 { font-size: 13.5px; margin: 8px 0 4px; }
+pre.yaml {
+  background: var(--term-bg); color: var(--term-fg); border-radius: 8px; padding: 10px 12px; margin: 8px 0;
+  font: 12px/1.45 ui-monospace, SFMono-Regular, Menlo, monospace; white-space: pre; overflow-x: auto;
+  outline: none; cursor: text;
+}
+pre.yaml:focus { box-shadow: 0 0 0 2px var(--acc); }
 .card-meta .card-switch { display: inline-flex; align-items: center; margin: 0; font-size: 12.5px; line-height: 1; color: var(--mut); gap: 5px; }
 .card-meta .card-switch input[type=checkbox] { width: 15px; height: 15px; margin: 0; }
 .card-off h2 { color: var(--mut); }
@@ -745,6 +753,39 @@ textarea.masked { -webkit-text-security: disc; text-security: disc; }
       </div>
     </div>
   </div>
+  <!-- Home-Assistant-Dashboard: Energie-Dashboard und fertige Karten (YAML) -->
+  <div class="layout">
+    <div class="card span-12">
+      <div class="card-head"><h2>Home-Assistant-Dashboard</h2>
+        <span class="card-meta"><button class="btn sec small" onclick="renderHomeAssistantDashboard()">Neu erzeugen</button></span></div>
+      <div class="hint">Home Assistant legt per MQTT nur Sensoren an &ndash; Dashboards lassen sich nicht mitliefern. Hier steht, was du einmalig einstellst bzw. einf&uuml;gst, abgestimmt auf die aktuell aktiven Ger&auml;te.</div>
+      <label>Entit&auml;ts-IDs in Home Assistant</label>
+      <select id="haEntityStyle" onchange="renderHomeAssistantDashboard()">
+        <option value="name">aus Ger&auml;t + Name, z. B. sensor.goodwe_gw25k_et_meter_leistung_gesamt (aktuelles Home Assistant)</option>
+        <option value="id">kurz, z. B. sensor.goodwe_meter_p (&auml;ltere Installationen)</option>
+      </select>
+      <div class="hint">Zur Kontrolle in Home Assistant unter <b>Einstellungen &rsaquo; Ger&auml;te &rsaquo; GoodWe &hellip;</b> einen Sensor &ouml;ffnen und dessen Entit&auml;ts-ID vergleichen. Hast du Entit&auml;ten umbenannt, im YAML anpassen.</div>
+      <div class="ha-steps">
+        <div>
+          <h3>1. Energie-Dashboard einrichten</h3>
+          <div class="hint">In Home Assistant: <b>Einstellungen &rsaquo; Dashboards &rsaquo; Energie</b> diese Sensoren ausw&auml;hlen.</div>
+          <div class="kv" id="haEnergySensors"></div>
+        </div>
+        <div>
+          <h3>2. Karte &bdquo;Energieverteilung&ldquo; (eingebaut)</h3>
+          <div class="hint">Zeigt den Energiefluss des gew&auml;hlten Zeitraums (kWh). Braucht Schritt 1. Dashboard bearbeiten &rsaquo; Karte hinzuf&uuml;gen &rsaquo; <i>Manuell</i> &rsaquo; einf&uuml;gen:</div>
+          <pre class="yaml" id="haYamlEnergy" tabindex="0" title="Klicken, dann Strg+A / Cmd+A markiert nur diesen Block"></pre>
+          <button class="btn sec small" onclick="copyText('haYamlEnergy')">Kopieren</button>
+        </div>
+        <div>
+          <h3>3. Live-Energiefluss (power-flow-card-plus)</h3>
+          <div class="hint">Zeigt die momentanen Leistungen (W). Vorher die Community-Karte <b>power-flow-card-plus</b> &uuml;ber HACS installieren, dann als manuelle Karte einf&uuml;gen:</div>
+          <pre class="yaml" id="haYamlFlow" tabindex="0" title="Klicken, dann Strg+A / Cmd+A markiert nur diesen Block"></pre>
+          <button class="btn sec small" onclick="copyText('haYamlFlow')">Kopieren</button>
+        </div>
+      </div>
+    </div>
+  </div>
   <div class="actions">
     <span class="hint">MQTT-&Auml;nderungen wirken sofort, ohne Neustart.</span>
     <button class="btn" onclick="saveMqtt()">Speichern</button>
@@ -879,14 +920,10 @@ textarea.masked { -webkit-text-security: disc; text-security: disc; }
         <div><label>NTP-Server 1</label><input id="ntpServer1"></div>
         <div><label>NTP-Server 2</label><input id="ntpServer2"></div>
       </div>
-      <label>Zeitzone (POSIX)</label>
-      <input id="timeZone" list="timezones">
-      <datalist id="timezones">
-        <option value="CET-1CEST,M3.5.0,M10.5.0/3">Mitteleuropa (Berlin, Wien, Z&uuml;rich)</option>
-        <option value="GMT0BST,M3.5.0/1,M10.5.0">Gro&szlig;britannien</option>
-        <option value="EET-2EEST,M3.5.0/3,M10.5.0/4">Osteuropa</option>
-        <option value="UTC0">UTC</option>
-      </datalist>
+      <label>Zeitzone</label>
+      <select id="timeZoneSelect" onchange="onTimeZoneSelected()"></select>
+      <input id="timeZone" class="hide" placeholder="POSIX-Zeitzone, z. B. CET-1CEST,M3.5.0,M10.5.0/3">
+      <div class="hint" id="timeZoneHint"></div>
       <div class="card-foot"><button class="btn" onclick="saveTime()">Speichern &amp; neu starten</button></div>
     </div>
     <div class="card span-4">
@@ -1291,6 +1328,84 @@ const VALUE_FIELDS = ['wgAddress', 'wgKeepalive', 'wgPeerPublicKey', 'wgEndpoint
 const CHECKBOX_FIELDS = ['wgEnabled', 'bridgeEnabled', 'gwInvertSign', 'lumelWordSwap', 'lumelSilentOnStale', 'lumelNoUndefined', 'testMode', 'webAuth',
   'mqttEnabled', 'mqttSingleTopics', 'mqttDiscovery'];
 
+// =====================================================================
+// Zeitzonen (System › Allgemein › Uhrzeit)
+// =====================================================================
+
+/**
+ * Zeitzonen Europas als POSIX-Regel (so erwartet sie ESP-IDF/newlib) mit den zugehörigen Städten.
+ * Sommerzeit EU: letzter Sonntag im März bis letzter Sonntag im Oktober.
+ */
+const EUROPE_TIME_ZONES = [
+  ['UTC−1 / UTC (Azoren)', '<-01>1<+00>,M3.5.0/0,M10.5.0/1', ['Azoren (Ponta Delgada)']],
+  ['UTC (ohne Sommerzeit)', 'GMT0', ['Reykjavík']],
+  ['UTC / UTC+1 (Westeuropa)', 'WET0WEST,M3.5.0/1,M10.5.0', ['Färöer (Tórshavn)', 'Kanaren (Las Palmas)', 'Lissabon', 'Madeira (Funchal)']],
+  ['UTC / UTC+1 (Großbritannien)', 'GMT0BST,M3.5.0/1,M10.5.0', ['Belfast', 'Cardiff', 'Edinburgh', 'Guernsey', 'Isle of Man', 'Jersey', 'London']],
+  ['UTC / UTC+1 (Irland)', 'GMT0IST,M3.5.0/1,M10.5.0', ['Dublin']],
+  ['UTC+1 / UTC+2 (Mitteleuropa)', 'CET-1CEST,M3.5.0,M10.5.0/3', ['Amsterdam', 'Andorra la Vella', 'Belgrad', 'Berlin', 'Bern', 'Bratislava',
+    'Brüssel', 'Budapest', 'Gibraltar', 'Hamburg', 'Kopenhagen', 'Ljubljana', 'Luxemburg', 'Madrid', 'Mailand', 'Monaco', 'München',
+    'Oslo', 'Paris', 'Podgorica', 'Prag', 'Rom', 'San Marino', 'Sarajevo', 'Skopje', 'Stockholm', 'Stuttgart', 'Tirana', 'Vaduz',
+    'Valletta', 'Vatikanstadt', 'Warschau', 'Wien', 'Zagreb', 'Zürich']],
+  ['UTC+2 / UTC+3 (Osteuropa)', 'EET-2EEST,M3.5.0/3,M10.5.0/4', ['Athen', 'Bukarest', 'Helsinki', 'Kiew', 'Mariehamn', 'Nikosia',
+    'Riga', 'Sofia', 'Tallinn', 'Vilnius']],
+  ['UTC+2 / UTC+3 (Moldau)', 'EET-2EEST,M3.5.0,M10.5.0/3', ['Chișinău']],
+  ['UTC+2 (ohne Sommerzeit)', 'EET-2', ['Kaliningrad']],
+  ['UTC+3 (ohne Sommerzeit)', 'MSK-3', ['Moskau', 'Sankt Petersburg']],
+  ['UTC+3 (Türkei, Belarus)', '<+03>-3', ['Istanbul', 'Minsk']],
+  ['UTC+4 (ohne Sommerzeit)', '<+04>-4', ['Samara']],
+  ['UTC', 'UTC0', ['UTC (koordinierte Weltzeit)']]
+];
+const CUSTOM_TIME_ZONE = 'custom';
+/** Stadt, die angezeigt wird, wenn der Browser sich noch keine Auswahl gemerkt hat */
+const DEFAULT_TIME_ZONE_CITY = {
+  'CET-1CEST,M3.5.0,M10.5.0/3': 'Berlin', 'GMT0BST,M3.5.0/1,M10.5.0': 'London', 'WET0WEST,M3.5.0/1,M10.5.0': 'Lissabon',
+  'EET-2EEST,M3.5.0/3,M10.5.0/4': 'Athen', 'MSK-3': 'Moskau', '<+03>-3': 'Istanbul'
+};
+
+/**
+ * Füllt die Auswahlliste der Zeitzonen (einmalig) und wählt den Eintrag zur gespeicherten
+ * POSIX-Zeitzone. Die zuletzt gewählte Stadt merkt sich der Browser, weil mehrere Städte dieselbe
+ * Zeitzone haben. Unbekannte Regeln erscheinen als "Eigene (POSIX)".
+ */
+function syncTimeZoneSelect() {
+  const select = byId('timeZoneSelect');
+  if (!select.options.length) {
+    select.innerHTML = EUROPE_TIME_ZONES.map(([groupName, rule, cities]) =>
+      `<optgroup label="${escapeHtml(groupName)}">`
+      + cities.map(city => `<option value="${escapeHtml(rule)}" data-city="${escapeHtml(city)}">${escapeHtml(city)}</option>`).join('')
+      + '</optgroup>').join('')
+      + `<optgroup label="Sonstige"><option value="${CUSTOM_TIME_ZONE}">Eigene (POSIX-Regel eingeben)</option></optgroup>`;
+  }
+  const rule = byId('timeZone').value;
+  let rememberedCity = '';
+  try { rememberedCity = localStorage.getItem('timeZoneCity') || ''; } catch (error) {}
+  const options = [...select.options];
+  const match = options.find(option => option.value == rule && option.dataset.city == rememberedCity)
+    || options.find(option => option.value == rule && option.dataset.city == DEFAULT_TIME_ZONE_CITY[rule])
+    || options.find(option => option.value == rule);
+  select.value = CUSTOM_TIME_ZONE;
+  if (match) match.selected = true;
+  updateTimeZoneVisibility();
+}
+
+/** Übernimmt die gewählte Stadt als POSIX-Zeitzone (bei "Eigene" bleibt das Eingabefeld maßgeblich). */
+function onTimeZoneSelected() {
+  const option = byId('timeZoneSelect').selectedOptions[0];
+  if (option.value != CUSTOM_TIME_ZONE) {
+    byId('timeZone').value = option.value;
+    try { localStorage.setItem('timeZoneCity', option.dataset.city); } catch (error) {}
+  }
+  updateTimeZoneVisibility();
+}
+
+/** Zeigt das Eingabefeld nur bei "Eigene" und darunter die verwendete POSIX-Regel. */
+function updateTimeZoneVisibility() {
+  const isCustom = byId('timeZoneSelect').value == CUSTOM_TIME_ZONE;
+  byId('timeZone').classList.toggle('hide', !isCustom);
+  byId('timeZoneHint').innerHTML = isCustom ? 'POSIX-Regel, wie sie ESP-IDF erwartet.'
+    : `POSIX-Regel: <code>${escapeHtml(byId('timeZone').value)}</code>`;
+}
+
 /**
  * Lädt die Konfiguration von /api/config, speichert sie in `config` und füllt
  * alle Formularfelder; die Port- und GPIO-Formulare werden dabei neu erzeugt.
@@ -1317,6 +1432,7 @@ async function loadConfig() {
   byId('gpiocfg').innerHTML = config.ports.map((port, index) => renderGpioForm(index, port)).join('');
 
   VALUE_FIELDS.forEach(key => byId(key).value = config[key]);
+  syncTimeZoneSelect();
   updateTransportVisibility();
   CHECKBOX_FIELDS.forEach(key => byId(key).checked = config[key]);
 }
@@ -1744,6 +1860,116 @@ const LUMEL_CONFIG_NAMES = {
 
 /** Wert, den der N43 für nicht definierte Größen sendet */
 const LUMEL_UNDEFINED = 1e20;
+
+// =====================================================================
+// System › MQTT: Home-Assistant-Dashboard (Energie-Dashboard und Karten-YAML)
+// =====================================================================
+
+/**
+ * Kopiert den Text eines Elements in die Zwischenablage.
+ * @param {string} elementId
+ */
+async function copyText(elementId) {
+  const text = byId(elementId).textContent;
+  try {
+    await navigator.clipboard.writeText(text);
+    showToast('Kopiert');
+  } catch (error) {
+    // ohne HTTPS gibt es keine Clipboard-API: Text markieren, damit Strg+C reicht
+    selectElementText(byId(elementId));
+    showToast('Markiert – mit Strg+C / Cmd+C kopieren');
+  }
+}
+
+/**
+ * Bildet aus einem Text eine Entitäts-ID wie Home Assistant (slugify): Umlaute umschreiben,
+ * Kleinbuchstaben, alles außer a-z/0-9 wird zu "_", doppelte und äußere "_" entfallen.
+ * @param {string} text  z. B. "GoodWe GW25K-ET Meter Leistung gesamt"
+ * @returns {string} z. B. "goodwe_gw25k_et_meter_leistung_gesamt"
+ */
+function slugifyLikeHomeAssistant(text) {
+  return text.toLowerCase()
+    .replace(/ä/g, 'a').replace(/ö/g, 'o').replace(/ü/g, 'u').replace(/ß/g, 'ss')
+    .normalize('NFKD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+}
+
+/**
+ * Erzeugt die Hinweise für das Energie-Dashboard von Home Assistant und das YAML für die Karten
+ * "Energieverteilung" und power-flow-card-plus, abgestimmt auf die aktiven Geräte und Werte.
+ * Entitäts-IDs folgen der MQTT-Discovery der Bridge: sensor.goodwe_<id>.
+ * @returns {Promise<void>}
+ */
+async function renderHomeAssistantDashboard() {
+  let goodwe;
+  try {
+    goodwe = await (await fetch('/api/goodwe')).json();
+  } catch (error) {
+    return;
+  }
+  const values = {}, names = {};
+  for (const [id, name, , , value] of goodwe.sensors) {
+    values[id] = value;
+    names[id] = name;
+  }
+  // Berechnete Summen der Bridge (MQTT), nicht in der Registertabelle
+  names.ppv_total = 'PV Leistung gesamt';
+  names.pbattery_total = 'Batterie Leistung gesamt';
+  const has = id => id in values;
+  // Entitäts-ID wie Home Assistant sie bildet: entweder aus Gerätename + Wertname oder aus der Objekt-ID
+  const deviceName = 'GoodWe ' + (goodwe.model || 'Wechselrichter');
+  const entity = id => byId('haEntityStyle').value == 'id'
+    ? 'sensor.goodwe_' + id
+    : 'sensor.' + slugifyLikeHomeAssistant(deviceName + ' ' + (names[id] || id));
+  const disabled = config.gwDisabled || [];
+
+  // --- 1. Energie-Dashboard: Smart-Meter-Zähler nur, wenn sie wirklich zählen (manche Firmware liefert 0)
+  const meterCounts = has('meter_e_total_imp') && parseFloat(values.meter_e_total_imp) > 0;
+  const gridImport = meterCounts ? 'meter_e_total_imp' : 'e_total_imp';
+  const gridExport = meterCounts ? 'meter_e_total_exp' : 'e_total_exp';
+  const energyRows = {
+    'Netzbezug': gridImport,
+    'Netzeinspeisung': gridExport,
+    'Solarproduktion': 'e_total',
+    'Batterie: in die Batterie': 'e_bat_charge_total',
+    'Batterie: aus der Batterie': 'e_bat_discharge_total'
+  };
+  const batteryActive = !disabled.includes('battery1') || !disabled.includes('battery2');
+  renderKeyValueList('haEnergySensors', Object.fromEntries(Object.entries(energyRows)
+    .filter(([label]) => batteryActive || !label.startsWith('Batterie'))
+    .map(([label, id]) => [label, has(id)
+      ? `<code>${entity(id)}</code>`
+      : `<span class="warn">${entity(id)} – derzeit kein Wert</span>`])));
+
+  // --- 2. eingebaute Karte
+  byId('haYamlEnergy').textContent = 'type: energy-distribution\nlink_dashboard: true\n';
+
+  // --- 3. power-flow-card-plus (Leistungen in W; GoodWe: Netz + = Einspeisung, Batterie + = Entladen)
+  const gridPower = has('meter_p') ? 'meter_p' : 'active_power';
+  const stateOfCharge = has('battery2_soc') && !has('battery_soc') ? 'battery2_soc'
+    : has('battery_soc') ? 'battery_soc' : has('battery2_soc') ? 'battery2_soc' : null;
+  const lines = [
+    'type: custom:power-flow-card-plus',
+    'title: ' + deviceDisplayName(goodwe.model),
+    'entities:',
+    '  grid:',
+    '    entity: ' + entity(gridPower),
+    '    invert_state: true          # GoodWe zählt Einspeisung positiv',
+    '  solar:',
+    '    entity: ' + entity('ppv_total'),
+  ];
+  if (batteryActive && (has('pbattery1') || has('pbattery2'))) {
+    lines.push('  battery:', '    entity: ' + entity('pbattery_total'),
+      '    # GoodWe: + = Entladen; zeigt der Pfeil falsch herum, invert_state: true ergänzen');
+    if (stateOfCharge) lines.push('    state_of_charge: ' + entity(stateOfCharge));
+  }
+  // Hausverbrauch: die Karte berechnet ihn aus Netz, PV und Batterie. Das ist vollständig, während
+  // "Last gesamt" des GoodWe die Verbraucher am Backup-Ausgang nicht enthält. Die Entität dient nur
+  // als Klickziel (Verlauf).
+  if (has('load_ptotal')) lines.push('  home:', '    entity: ' + entity('load_ptotal'));
+  lines.push('kilo_threshold: 10000          # ab 10 kW in kW anzeigen');
+  byId('haYamlFlow').textContent = lines.join('\n') + '\n';
+}
 
 /**
  * Lädt die ausgegebenen Lumel-Register von /api/lumel und stellt sie dar.
@@ -2452,22 +2678,35 @@ if (window.visualViewport) window.visualViewport.addEventListener('resize', fitC
  * Markiert den gesamten Konsoleninhalt (statt der ganzen Seite).
  */
 function selectAllConsoleText() {
-  const output = byId('consoleOutput');
+  selectElementText(byId('consoleOutput'));
+}
+
+/**
+ * Markiert den gesamten Text eines Elements (und nur diesen).
+ * @param {HTMLElement} element
+ */
+function selectElementText(element) {
   const range = document.createRange();
-  range.selectNodeContents(output);
+  range.selectNodeContents(element);
   const selection = window.getSelection();
   selection.removeAllRanges();
   selection.addRange(range);
 }
 
-// Strg+A / Cmd+A: im Konsolen-Reiter nur die Ausgabe markieren. In Eingabefeldern bleibt das
-// normale Verhalten (Feldinhalt markieren) erhalten.
+// Strg+A / Cmd+A: In einem angeklickten YAML-Block (System › MQTT) nur diesen Block markieren,
+// im Konsolen-Reiter nur die Ausgabe. In Eingabefeldern bleibt das normale Verhalten erhalten.
 document.addEventListener('keydown', event => {
   const isSelectAll = (event.ctrlKey || event.metaKey) && !event.altKey && event.key.toLowerCase() === 'a';
-  if (!isSelectAll || byId('t-co').classList.contains('hide')) return;
+  if (!isSelectAll) return;
   const target = event.target;
   const isTextField = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable;
   if (isTextField) return;
+  if (target.matches && target.matches('pre.yaml')) {
+    event.preventDefault();
+    selectElementText(target);
+    return;
+  }
+  if (byId('t-co').classList.contains('hide')) return;
   event.preventDefault();
   selectAllConsoleText();
 });
@@ -2516,6 +2755,7 @@ setInterval(() => {
 }, 1000);
 document.querySelector('[data-t=gw]').addEventListener('click', loadGoodweValues);
 document.querySelector('[data-t=lu]').addEventListener('click', loadLumelValues);
+document.querySelector('[data-t=mq]').addEventListener('click', renderHomeAssistantDashboard);
 </script>
 </body>
 </html>)HTML";

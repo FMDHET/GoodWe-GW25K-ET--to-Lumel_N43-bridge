@@ -32,7 +32,8 @@ OTA mit Rollback, WireGuard-VPN, NTP und eine Modbus-TCP-Bridge.
   ([docs/lumel_n43_register.md](docs/lumel_n43_register.md)), Reiter *Lumel* zeigt alle ausgegebenen Register.
 - **Modbus-TCP-Bridge:** reicht jede Anfrage aus dem lokalen Netz unverändert an den GoodWe durch
   (alle Funktionscodes, ohne Cache, Exceptions original).
-- **MQTT / MQTTS** mit Home-Assistant-Auto-Discovery.
+- **MQTT / MQTTS** mit Home-Assistant-Auto-Discovery, dazu fertige Anleitung und YAML für das Energie-Dashboard
+  und eine Live-Energiefluss-Karte (power-flow-card-plus).
 - **OTA-Update** mit Partitionswechsel und automatischem Rollback, **WireGuard-Client**, **NTP**.
 - **Web-Konsole** mit Live-Log und Modbus-Busmonitor, **Identify**-Knopf je RS485-Port.
 
@@ -86,9 +87,9 @@ das WLAN zusammen; Standard ist deshalb 11 dBm (einstellbar unter *System › WL
 | Übersicht | Kennzahlen (Netz, PV, Batterie mit Lade-/Entlade-Badge, Verbindung), Messwerte L1–L3, GoodWe-Info, Port-Statistik |
 | GoodWe | alle Werte je Gerät, Zuordnung Intervall 1/2 je Wert, Geräte ein/aus, gelesene Registerbereiche |
 | Lumel | alle Register, die die Simulation gerade ausgibt (7500 ff., 7000/6000, Hex, Konfiguration 4000 ff.) |
-| System › Allgemein | Firmware-Update mit Rollback, NTP/Zeitzone, Web-Login, Neustart, Werksreset |
+| System › Allgemein | Firmware-Update mit Rollback, NTP und Zeitzone (alle Zeitzonen Europas als Auswahl), Web-Login, Neustart, Werksreset |
 | System › Konsole | Live-Log per WebSocket, Befehlszeile, Modbus-Busmonitor |
-| System › MQTT | Broker, Topics, Intervall, MQTTS, Home-Assistant-Discovery |
+| System › MQTT | Broker, Topics, Intervall, MQTTS, Home-Assistant-Discovery, Home-Assistant-Dashboard (Energie-Dashboard, Karten-YAML) |
 | System › WLAN | Netzsuche, Zugangsdaten, Hostname, AP-Passwort, Sendeleistung |
 | System › VPN | WireGuard-Client (Import aus wg-quick-Format, z. B. FRITZ!Box) |
 | System › Modbus | GoodWe-Anbindung (RS485/TCP), Datenquelle, Intervalle, Lumel-Optionen, TCP-Bridge, RS485-Ports |
@@ -143,6 +144,10 @@ erreicht, kann sie also lesen – ggf. den Web-Login aktivieren.
 | `<basis>/goodwe/<id>` | Einzelwerte (optional) |
 | `<basis>/meter/state` | Werte, die als Lumel N43 ausgegeben werden |
 | `<basis>/bridge/state` | Diagnose (RSSI, Laufzeit, GoodWe online, Fehlerzähler) |
+
+Zusätzlich sendet die Bridge die Summen **PV Leistung gesamt** und **Batterie Leistung gesamt** für
+Energiefluss-Karten. Anleitung: Wiki-Seite
+[Energie-Dashboard in Home Assistant](https://github.com/FMDHET/GoodWe-GW25K-ET--to-Lumel_N43-bridge/wiki/Energie-Dashboard-Home-Assistant).
 
 MQTTS (Port 8883) mit Prüfung gegen eigenes CA-Zertifikat, gegen das Zertifikats-Bundle oder ohne
 Prüfung; optional Client-Zertifikat (mTLS). Mit Auto-Discovery legt Home Assistant die Geräte

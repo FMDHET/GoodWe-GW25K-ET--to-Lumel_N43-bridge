@@ -1,9 +1,11 @@
 // MQTT-Anbindung der Bridge: Verbindungsaufbau mit esp-mqtt (optional TLS), zyklisches Senden der
 // GoodWe-, Zähler- und Diagnosewerte sowie Home-Assistant-Auto-Discovery. Läuft in einem eigenen Task.
+#include <initializer_list>
 #include "chip.h"
 #include "mqtt.h"
 #include <atomic>
 #include <cstdio>
+#include <cstdlib>
 #include <string>
 #include "config.h"
 #include "esp_crt_bundle.h"
@@ -211,6 +213,16 @@ static cJSON* createGoodweSensorConfig(const GoodweSensor& sensor, const char* m
   return config;
 }
 
+// Berechnete Summen für Home-Assistant-Karten (z. B. Energiefluss), die je Quelle nur einen Sensor
+// anzeigen können. Sie stehen nicht in der Registertabelle, sondern werden beim Senden gebildet.
+static const GoodweSensor COMPUTED_SENSORS[] = {
+    {"ppv_total", "PV Leistung gesamt", BLOCK_INVERTER, 0, TYPE_S32, 1, "W", "power", STATE_CLASS_MEASUREMENT,
+     nullptr, 0, false},
+    {"pbattery_total", "Batterie Leistung gesamt", BLOCK_INVERTER, 0, TYPE_S32, 1, "W", "power",
+     STATE_CLASS_MEASUREMENT, nullptr, 0, false},
+};
+static bool computedSensorsAnnounced = false;
+
 // Kündigt alle aktuell lesbaren GoodWe-Sensoren an (z.B. BMS-Werte erst, wenn eine Batterie antwortet).
 // Bereits angekündigte Sensoren werden nur bei geändertem Modell erneut gesendet.
 static void publishGoodweDiscovery(const GoodweRegisters& registers) {
@@ -231,6 +243,12 @@ static void publishGoodweDiscovery(const GoodweRegisters& registers) {
     markSensorAnnounced(sensorIndex);
     vTaskDelay(pdMS_TO_TICKS(5));  // Sendepuffer nicht fluten
   }
+  // Berechnete Summen, sobald der Wechselrichterblock gelesen ist
+  if (registers.inverterValid && (!computedSensorsAnnounced || modelChanged)) {
+    for (const GoodweSensor& sensor : COMPUTED_SENSORS)
+      publishDiscoveryConfig("sensor", sensor.id, createGoodweSensorConfig(sensor, model, serialNumber, firmwareVersion));
+    computedSensorsAnnounced = true;
+  }
   copyString(announcedModel, model, sizeof(announcedModel));
 }
 
@@ -238,9 +256,28 @@ static void publishGoodweDiscovery(const GoodweRegisters& registers) {
 
 // Sendet alle lesbaren GoodWe-Werte samt Modell/Seriennummer als JSON an <basis>/goodwe/state und,
 // falls konfiguriert, zusätzlich jeden Wert einzeln an <basis>/goodwe/<id>.
+// Bildet die Summe der vorhandenen Werte keys (z. B. PV1..PV4) aus state und trägt sie unter sumKey ein.
+// Fehlen alle Werte (Gerät abgeschaltet oder nicht vorhanden), wird nichts eingetragen.
+static void addSumOfValues(cJSON* state, const char* sumKey, std::initializer_list<const char*> keys) {
+  double sum = 0;
+  bool anyValue = false;
+  for (const char* key : keys) {
+    const cJSON* item = cJSON_GetObjectItemCaseSensitive(state, key);
+    // Messwerte stehen als vorformatierte Zahl (Raw, siehe jsonNumberWithDecimals), nicht als Number
+    if (cJSON_IsRaw(item)) sum += atof(item->valuestring);
+    else if (cJSON_IsNumber(item)) sum += item->valuedouble;
+    else continue;
+    anyValue = true;
+  }
+  if (anyValue) cJSON_AddItemToObject(state, sumKey, jsonNumberWithDecimals(sum, 0));
+}
+
 static void publishGoodweState(const GoodweRegisters& registers) {
   cJSON* state = cJSON_CreateObject();
   goodweSensorsToJson(state, registers);
+  // Summen für Home-Assistant-Karten (siehe COMPUTED_SENSORS); GoodWe: Batterie + = Entladen
+  addSumOfValues(state, "ppv_total", {"ppv1", "ppv2", "ppv3", "ppv4"});
+  addSumOfValues(state, "pbattery_total", {"pbattery1", "pbattery2"});
   char model[20], serialNumber[18];
   goodweReadDeviceStrings(registers, model, sizeof(model), serialNumber, sizeof(serialNumber));
   if (model[0]) cJSON_AddStringToObject(state, "model", model);
@@ -474,6 +511,7 @@ static void mqttTask(void*) {
     if (connectionJustEstablished.exchange(false) || rediscoveryRequested.exchange(false)) {
       memset(announcedSensorBits, 0, sizeof(announcedSensorBits));
       announcedModel[0] = 0;
+      computedSensorsAnnounced = false;
       if (g_config.mqttDiscoveryEnabled) publishBridgeDiscovery();
       lastPublishMs = 0;
     }
