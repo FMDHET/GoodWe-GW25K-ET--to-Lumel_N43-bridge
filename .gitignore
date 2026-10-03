@@ -1,0 +1,18 @@
+# Build-Ausgaben von PlatformIO / ESP-IDF
+.pio/
+build/
+# vom ESP-IDF-Komponentenmanager geladene Komponenten (Versionen stehen in dependencies.lock)
+managed_components/
+# von PlatformIO je Umgebung erzeugte sdkconfig (Vorgaben stehen in sdkconfig.defaults*)
+sdkconfig.esp32-c6
+sdkconfig.esp32-c3
+sdkconfig.ota
+sdkconfig.ota-c3
+sdkconfig.old
+# Editor / System
+.vscode/
+.DS_Store
+__pycache__/
+
+# lokale Notizen
+Prompt.md

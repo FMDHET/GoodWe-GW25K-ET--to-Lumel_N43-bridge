@@ -1,0 +1,40 @@
+dependencies:
+  esphome/libsodium:
+    component_hash: 860ef0c4c58b57e5c83f9396cbfb9b664cea8c457fc1baf447518079a3da4207
+    dependencies: []
+    source:
+      registry_url: https://components.espressif.com
+      type: service
+    version: 1.10021.11
+  esphome/wireguard:
+    component_hash: dc76a4b613ca3ceb0eddeb5b011d5a8bcdde021c07f58259b0133417e5002a9c
+    dependencies:
+    - name: esphome/libsodium
+      registry_url: https://components.espressif.com
+      require: private
+      version: ^1.10021.1
+    source:
+      registry_url: https://components.espressif.com/
+      type: service
+    version: 0.4.6
+  espressif/mdns:
+    component_hash: b5b30022c46302eab89c1d2e3b6fb5918a627563a7462f0ee284b22b9a934967
+    dependencies:
+    - name: idf
+      require: private
+      version: '>=5.0'
+    source:
+      registry_url: https://components.espressif.com/
+      type: service
+    version: 1.14.0
+  idf:
+    source:
+      type: idf
+    version: 5.5.1
+direct_dependencies:
+- esphome/wireguard
+- espressif/mdns
+- idf
+manifest_hash: 3356cf67f17be61646f33d16f88e74f3ddad36decd21385663aa59fbaa3e006f
+target: esp32c3
+version: 2.0.0

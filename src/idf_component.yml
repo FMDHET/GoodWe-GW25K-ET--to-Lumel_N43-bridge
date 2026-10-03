@@ -1,0 +1,5 @@
+dependencies:
+  idf: ">=5.3"
+  espressif/mdns: "^1.4.0"
+  # gepflegter Fork von trombik/esp_wireguard (ESPHome), mit Korrekturen für aktuelle ESP-IDF-Versionen
+  esphome/wireguard: "^0.4.6"

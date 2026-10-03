@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 400" font-family="-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#8f9bab"/></marker>
+    <linearGradient id="esp" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1f6feb"/><stop offset="1" stop-color="#1458c4"/></linearGradient>
+  </defs>
+  <rect width="960" height="400" rx="16" fill="#0e1217"/>
+  <!-- GoodWe -->
+  <g>
+    <rect x="30" y="60" width="210" height="110" rx="12" fill="#171c23" stroke="#2f3a46"/>
+    <text x="135" y="98" fill="#e5eaef" font-size="18" font-weight="700" text-anchor="middle">GoodWe ET</text>
+    <text x="135" y="122" fill="#8f9bab" font-size="13" text-anchor="middle">z. B. GW25K-ET</text>
+    <text x="135" y="146" fill="#8f9bab" font-size="12" text-anchor="middle">Smart-Meter · Batterie 1/2</text>
+  </g>
+  <g>
+    <rect x="30" y="230" width="210" height="110" rx="12" fill="#171c23" stroke="#2f3a46" stroke-dasharray="5 4"/>
+    <text x="135" y="268" fill="#e5eaef" font-size="16" font-weight="700" text-anchor="middle">RTU-zu-TCP-Gateway</text>
+    <text x="135" y="292" fill="#8f9bab" font-size="12" text-anchor="middle">optional, auch über</text>
+    <text x="135" y="312" fill="#8f9bab" font-size="12" text-anchor="middle">WireGuard-VPN</text>
+  </g>
+  <!-- ESP -->
+  <rect x="370" y="80" width="220" height="240" rx="16" fill="url(#esp)"/>
+  <text x="480" y="128" fill="#fff" font-size="20" font-weight="700" text-anchor="middle">Modbus-Bridge</text>
+  <text x="480" y="152" fill="#dbe7ff" font-size="14" text-anchor="middle">ESP32-C6 / ESP32-C3</text>
+  <text x="480" y="196" fill="#fff" font-size="13" text-anchor="middle">RTU1 · RTU2 (RS485)</text>
+  <text x="480" y="218" fill="#fff" font-size="13" text-anchor="middle">WLAN · OTA · NTP</text>
+  <text x="480" y="240" fill="#fff" font-size="13" text-anchor="middle">Weboberfläche</text>
+  <text x="480" y="262" fill="#fff" font-size="13" text-anchor="middle">2 Abfrageintervalle</text>
+  <!-- Ziele -->
+  <g>
+    <rect x="720" y="40" width="210" height="90" rx="12" fill="#171c23" stroke="#2f3a46"/>
+    <text x="825" y="76" fill="#e5eaef" font-size="17" font-weight="700" text-anchor="middle">„Lumel N43“</text>
+    <text x="825" y="100" fill="#8f9bab" font-size="12" text-anchor="middle">simuliert · Modbus RTU Slave</text>
+  </g>
+  <g>
+    <rect x="720" y="155" width="210" height="90" rx="12" fill="#171c23" stroke="#2f3a46"/>
+    <text x="825" y="191" fill="#e5eaef" font-size="17" font-weight="700" text-anchor="middle">MQTT / MQTTS</text>
+    <text x="825" y="215" fill="#8f9bab" font-size="12" text-anchor="middle">Home-Assistant-Discovery</text>
+  </g>
+  <g>
+    <rect x="720" y="270" width="210" height="90" rx="12" fill="#171c23" stroke="#2f3a46"/>
+    <text x="825" y="306" fill="#e5eaef" font-size="17" font-weight="700" text-anchor="middle">Modbus-TCP-Bridge</text>
+    <text x="825" y="330" fill="#8f9bab" font-size="12" text-anchor="middle">Port 502 · direkt zum GoodWe</text>
+  </g>
+  <!-- Verbindungen -->
+  <path d="M240 115 H370" stroke="#8f9bab" stroke-width="2" marker-end="url(#a)"/>
+  <text x="305" y="105" fill="#8f9bab" font-size="12" text-anchor="middle">RS485</text>
+  <path d="M135 170 V230" stroke="#8f9bab" stroke-width="2" stroke-dasharray="5 4"/>
+  <path d="M240 285 H370" stroke="#8f9bab" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a)"/>
+  <text x="305" y="275" fill="#8f9bab" font-size="12" text-anchor="middle">Modbus TCP</text>
+  <path d="M590 140 L720 85" stroke="#8f9bab" stroke-width="2" marker-end="url(#a)"/>
+  <text x="652" y="100" fill="#8f9bab" font-size="12" text-anchor="middle">RS485</text>
+  <path d="M590 200 H720" stroke="#8f9bab" stroke-width="2" marker-end="url(#a)"/>
+  <text x="655" y="192" fill="#8f9bab" font-size="12" text-anchor="middle">WLAN</text>
+  <path d="M720 315 L590 260" stroke="#8f9bab" stroke-width="2" marker-end="url(#a)" marker-start="url(#a)"/>
+  <text x="660" y="300" fill="#8f9bab" font-size="12" text-anchor="middle">LAN</text>
+</svg>

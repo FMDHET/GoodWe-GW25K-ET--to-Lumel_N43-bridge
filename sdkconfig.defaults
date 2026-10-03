@@ -1,0 +1,58 @@
+# ---- Flash / Partitionen
+CONFIG_ESPTOOLPY_FLASHSIZE_4MB=y
+CONFIG_PARTITION_TABLE_CUSTOM=y
+CONFIG_PARTITION_TABLE_CUSTOM_FILENAME="partitions.csv"
+
+# ---- OTA mit Rollback (Bootloader startet bei nicht bestätigter, abgestürzter App die vorherige)
+CONFIG_BOOTLOADER_APP_ROLLBACK_ENABLE=y
+CONFIG_BOOTLOADER_LOG_LEVEL_WARN=y
+
+# ---- Konsole ausschließlich über USB-Serial-JTAG: kein Log auf UART0/UART1 (RS485-Busse!)
+CONFIG_ESP_CONSOLE_USB_SERIAL_JTAG=y
+CONFIG_ESP_CONSOLE_SECONDARY_NONE=y
+
+# ---- Task-Watchdog: hängende Tasks -> Panic -> Reset (-> Rollback, falls App noch auf Bewährung)
+CONFIG_ESP_TASK_WDT_EN=y
+CONFIG_ESP_TASK_WDT_INIT=y
+CONFIG_ESP_TASK_WDT_PANIC=y
+CONFIG_ESP_TASK_WDT_TIMEOUT_S=20
+CONFIG_ESP_SYSTEM_PANIC_PRINT_REBOOT=y
+
+# ---- FreeRTOS: 1-ms-Tick für die Modbus-Zeitbedingungen
+CONFIG_FREERTOS_HZ=1000
+
+# ---- lwIP: größerer Stack für den Netzwerk-Task, da dort die WireGuard-Kryptografie
+#      (x25519/ChaCha20) läuft (Komponente esp_wireguard empfiehlt >= 5 KB)
+CONFIG_LWIP_TCPIP_TASK_STACK_SIZE=6144
+
+# ---- WireGuard: ohne PPP-Unterstützung hält esp_netif das WireGuard-lwIP-Interface für ein eigenes
+#      und stürzt im DHCP-Callback ab (trombik/esp_wireguard Issue #33, so auch in ESPHome gelöst)
+CONFIG_LWIP_PPP_SUPPORT=y
+
+# ---- Absturzanalyse: Core-Dump in die Flash-Partition "coredump" (ELF-Format)
+CONFIG_ESP_COREDUMP_ENABLE_TO_FLASH=y
+CONFIG_ESP_COREDUMP_DATA_FORMAT_ELF=y
+
+# ---- HTTP-Server
+CONFIG_HTTPD_MAX_REQ_HDR_LEN=1024
+CONFIG_HTTPD_MAX_URI_LEN=512
+# WebSocket für die Live-Konsole der Weboberfläche
+CONFIG_HTTPD_WS_SUPPORT=y
+
+# ---- MQTT / TLS
+CONFIG_MBEDTLS_CERTIFICATE_BUNDLE=y
+CONFIG_MBEDTLS_CERTIFICATE_BUNDLE_DEFAULT_FULL=y
+# erlaubt die Option "Serverzertifikat nicht prüfen" in der Weboberfläche
+CONFIG_ESP_TLS_INSECURE=y
+CONFIG_ESP_TLS_SKIP_SERVER_CERT_VERIFY=y
+
+# ---- NTP: zwei Server für die Zeitsynchronisation
+CONFIG_LWIP_SNTP_MAX_SERVERS=2
+
+# ---- Logging (Zeitstempel als Uhrzeit, sobald NTP die Uhr gestellt hat)
+CONFIG_LOG_DEFAULT_LEVEL_INFO=y
+CONFIG_LOG_TIMESTAMP_SOURCE_SYSTEM=y
+CONFIG_LOG_COLORS=n
+
+# ---- Compiler
+CONFIG_COMPILER_OPTIMIZATION_SIZE=y
