@@ -185,7 +185,7 @@ main > section > * + * { margin-top: var(--gutter); }
   margin-bottom: 10px;
 }
 .card-head h2, .card > h2 { font-size: 14.5px; margin: 0; font-weight: 650; }
-.card-meta { color: var(--mut); font-size: 12.5px; }
+.card-meta { color: var(--mut); font-size: 12.5px; display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 /* Fußzeile mit Aktionen: sitzt immer am unteren Kartenrand */
 .card-foot {
   display: flex;
@@ -230,6 +230,7 @@ main > section > * + * { margin-top: var(--gutter); }
 table { border-collapse: collapse; width: 100%; }
 td, th {
   padding: 6px 10px;
+  vertical-align: middle;
   text-align: right;
   border-bottom: 1px solid var(--line);
   font-variant-numeric: tabular-nums;
@@ -241,6 +242,7 @@ td:last-child, th:last-child { padding-right: 0; }
 th { font-weight: 600; color: var(--mut); font-size: 12.5px; }
 /* Messwerttabelle: feste Zahlenspalten, Beschriftung nimmt den Rest */
 .measure-table th:not(:first-child), .measure-table td:not(:first-child) { width: 15%; }
+.value-table td:first-child { overflow-wrap: normal; hyphens: auto; -webkit-hyphens: auto; }
 .value-table td:nth-child(2) { color: var(--fg); font-weight: 500; }
 .value-table td:nth-child(3) { color: var(--mut); font-size: 12px; width: 1%; }
 .pinmap td { text-align: left; white-space: normal; }
@@ -265,8 +267,8 @@ th { font-weight: 600; color: var(--mut); font-size: 12.5px; }
 .lumel-table td:nth-child(n+4) { color: var(--mut); font-size: 12px; }
 .lumel-table td:last-child { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; white-space: nowrap; overflow: visible; }
 .identify-btn { margin-left: 8px; padding: 1px 10px; min-height: 0; font-size: 12px; vertical-align: 1px; }
-.card-meta .card-switch { display: inline-flex; margin: 0; font-size: 12.5px; color: var(--mut); gap: 6px; }
-.card-meta .card-switch input[type=checkbox] { width: 16px; height: 16px; }
+.card-meta .card-switch { display: inline-flex; align-items: center; margin: 0; font-size: 12.5px; line-height: 1; color: var(--mut); gap: 5px; }
+.card-meta .card-switch input[type=checkbox] { width: 15px; height: 15px; margin: 0; }
 .card-off h2 { color: var(--mut); }
 .kpi-label .pill { margin-left: 6px; font-size: 11.5px; padding: 0 8px; vertical-align: 1px; }
 .pill {
