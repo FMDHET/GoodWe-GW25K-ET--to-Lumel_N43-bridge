@@ -756,6 +756,13 @@ void webBegin(RtuPort* ports[2]) {
   serverConfig.max_uri_handlers = 24;
   serverConfig.stack_size = 8192;
   serverConfig.lru_purge_enable = true;  // bei vielen Verbindungen die älteste schließen
+  // TCP-Keepalive: Verbindungen von Clients, die ohne Abmelden verschwinden (z. B. Handy verlässt
+  // den Access-Point, Web-Konsole bleibt offen), nach etwa 20 s schließen. Sonst belegen sie
+  // dauerhaft Sockets, bis keine neue Verbindung mehr angenommen wird.
+  serverConfig.keep_alive_enable = true;
+  serverConfig.keep_alive_idle = 5;
+  serverConfig.keep_alive_interval = 5;
+  serverConfig.keep_alive_count = 3;
   serverConfig.recv_wait_timeout = 10;
   serverConfig.send_wait_timeout = 10;
   if (httpd_start(&httpServer, &serverConfig) != ESP_OK) {

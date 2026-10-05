@@ -38,6 +38,7 @@ static const int STATION_CONNECTED_BIT = BIT0;
 static const uint32_t STATION_CONNECT_WAIT_MS = 15000;     // beim Start auf die Verbindung warten
 static const uint32_t STATION_LOST_FALLBACK_MS = 60000;    // AP einschalten nach 60 s ohne Verbindung
 static const uint32_t ACCESS_POINT_IDLE_OFF_MS = 300000;   // AP abschalten 5 min nach erneuter Verbindung
+static const uint32_t STATION_RETRY_WITH_AP_MS = 60000;    // bei aktivem AP höchstens jede Minute neu verbinden
 static const size_t ACCESS_POINT_MIN_PASSWORD_LENGTH = 8;    // WPA2 verlangt mindestens 8 Zeichen
 static const uint8_t ACCESS_POINT_MAX_CLIENTS = 4;
 static const uint8_t ACCESS_POINT_CHANNEL = 1;
@@ -53,6 +54,8 @@ static uint32_t stationLostSinceMs = 0;   // 0 = Verbindung nicht verloren
 static char accessPointSsid[32];
 static char stationIp[16] = "";
 static volatile bool scanInProgress = false;
+static volatile bool stationReconnectPending = false;  // Verbindungsversuch wartet auf netLoop()
+static uint32_t lastStationRetryAtMs = 0;
 
 // Ereignis-Handler für WLAN- und IP-Ereignisse (läuft im Event-Loop-Task).
 // Verbindet die Station, verfolgt den Verbindungszustand und merkt sich die erhaltene IP.
@@ -62,8 +65,11 @@ static void onWifiEvent(void*, esp_event_base_t eventBase, int32_t eventId, void
   } else if (eventBase == WIFI_EVENT && eventId == WIFI_EVENT_STA_DISCONNECTED) {
     xEventGroupClearBits(wifiEventGroup, STATION_CONNECTED_BIT);
     stationIp[0] = 0;
-    // erneut verbinden (nicht während eines Scans, der sonst abbricht)
-    if (g_config.wifiSsid[0] && !scanInProgress) esp_wifi_connect();
+    // erneut verbinden (nicht während eines Scans, der sonst abbricht);
+    // bei aktivem Access-Point gedrosselt über netLoop(), damit der AP stabil bleibt
+    if (!g_config.wifiSsid[0] || scanInProgress) return;
+    if (accessPointActive) stationReconnectPending = true;
+    else esp_wifi_connect();
   } else if (eventBase == IP_EVENT && eventId == IP_EVENT_STA_GOT_IP) {
     auto* gotIpEvent = (ip_event_got_ip_t*)eventData;
     snprintf(stationIp, sizeof(stationIp), IPSTR, IP2STR(&gotIpEvent->ip_info.ip));
@@ -157,6 +163,26 @@ void netBegin() {
   }
 }
 
+// Anzahl der am eigenen Access-Point angemeldeten Clients (0, wenn der AP aus ist)
+static int accessPointClientCount() {
+  wifi_sta_list_t connectedClients;
+  if (!accessPointActive || esp_wifi_ap_get_sta_list(&connectedClients) != ESP_OK) return 0;
+  return connectedClients.num;
+}
+
+// Verbindet die Station bei aktivem Access-Point nur gedrosselt neu: Jeder Versuch sucht alle
+// Kanäle nach dem WLAN ab, und da AP und Station sich ein Funkteil teilen, verlässt dabei auch
+// der AP seinen Kanal - angemeldete Clients verlieren die Verbindung. Deshalb höchstens jede
+// Minute und gar nicht, solange ein Client am AP angemeldet ist.
+static void retryStationWhileAccessPointActive(uint32_t nowMs) {
+  if (!accessPointActive || !stationReconnectPending || scanInProgress) return;
+  if (nowMs - lastStationRetryAtMs < STATION_RETRY_WITH_AP_MS) return;
+  if (accessPointClientCount() > 0) return;
+  stationReconnectPending = false;
+  lastStationRetryAtMs = nowMs;
+  esp_wifi_connect();
+}
+
 // Zyklische Überwachung: Access-Point nach Verbindungsverlust einschalten
 // bzw. nach stabiler Verbindung wieder abschalten, wenn kein Client angemeldet ist.
 void netLoop() {
@@ -164,14 +190,15 @@ void netLoop() {
   if (netStaConnected()) {
     stationLostSinceMs = 0;
     // AP 5 Minuten nach erfolgreicher Verbindung abschalten, wenn niemand angemeldet ist
-    wifi_sta_list_t connectedClients;
+    stationReconnectPending = false;
     if (accessPointActive && nowMs - accessPointStartedAtMs > ACCESS_POINT_IDLE_OFF_MS &&
-        esp_wifi_ap_get_sta_list(&connectedClients) == ESP_OK && connectedClients.num == 0)
+        accessPointClientCount() == 0)
       stopAccessPoint();
   } else if (g_config.wifiSsid[0]) {
     if (!stationLostSinceMs) stationLostSinceMs = nowMs;
     // Fallback nach 60 s Ausfall
     if (!accessPointActive && nowMs - stationLostSinceMs > STATION_LOST_FALLBACK_MS) startAccessPoint();
+    retryStationWhileAccessPointActive(nowMs);
   }
 }
 
@@ -242,6 +269,10 @@ cJSON* netScan() {
   }
   scanInProgress = false;
   // Ein während des Scans unterdrückter Wiederverbindungsversuch wird hier nachgeholt
-  if (g_config.wifiSsid[0] && !netStaConnected()) esp_wifi_connect();
+  // (bei aktivem Access-Point gedrosselt über netLoop())
+  if (g_config.wifiSsid[0] && !netStaConnected()) {
+    if (accessPointActive) stationReconnectPending = true;
+    else esp_wifi_connect();
+  }
   return networkList;
 }

@@ -24,6 +24,10 @@ CONFIG_FREERTOS_HZ=1000
 # ---- lwIP: größerer Stack für den Netzwerk-Task, da dort die WireGuard-Kryptografie
 #      (x25519/ChaCha20) läuft (Komponente esp_wireguard empfiehlt >= 5 KB)
 CONFIG_LWIP_TCPIP_TASK_STACK_SIZE=6144
+# Sockets: Webserver 3 intern + 7 Clients, Modbus-TCP-Bridge 1 + 4 Clients, GoodWe-TCP, MQTT,
+# Captive-Portal-DNS = 18. Mit dem Standardwert 10 waren die Sockets aufgebraucht, bevor der
+# Webserver alte Verbindungen schließt, und die Weboberfläche nahm keine Verbindung mehr an.
+CONFIG_LWIP_MAX_SOCKETS=20
 
 # ---- WireGuard: ohne PPP-Unterstützung hält esp_netif das WireGuard-lwIP-Interface für ein eigenes
 #      und stürzt im DHCP-Callback ab (trombik/esp_wireguard Issue #33, so auch in ESPHome gelöst)

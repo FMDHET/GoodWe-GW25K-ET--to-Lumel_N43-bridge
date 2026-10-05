@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
 
 # Firmware-Version (landet in esp_app_desc_t und wird beim OTA-Update geprüft)
-set(PROJECT_VER "2.10.8")
+set(PROJECT_VER "2.10.10")
 
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 
